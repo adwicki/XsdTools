@@ -8,7 +8,7 @@ namespace XsdTools.FetchRelated;
 public class FetchCommand : Command, IServiceModule
 {
     public FetchCommand(HandlerFactory handlerFactory)
-        : base("fetch-related", "Given an xsd schema, fetches all linked (imported) schemas.")
+        : base("fetch", "Given an xsd schema, fetches all linked (imported) schemas.")
     {
         FetchArgs.Declare(this);
         Handler = handlerFactory.SimpleHandler<FetchHandler, FetchArgs>((() => [this]));
