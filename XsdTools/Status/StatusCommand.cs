@@ -16,6 +16,6 @@ public class StatusCommand : Command, IServiceModule
 
     void IServiceModule.ConfigureServices(IServiceCollection services, IConfigurationRoot config)
     {
-        services.AddSingleton(new DelayConfig(config));
+        services.AddSingleton(new ApplicationConfig(config));
     }
 }

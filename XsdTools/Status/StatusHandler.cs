@@ -3,12 +3,13 @@ using System.CommandLine.Invocation;
 
 namespace XsdTools.Status;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public class StatusHandler : ISimpleHandler<StatusArgs>
 {
     private readonly IConsole _console;
-    private readonly DelayConfig _config;
+    private readonly ApplicationConfig _config;
 
-    public StatusHandler(IConsole console, DelayConfig config)
+    public StatusHandler(IConsole console, ApplicationConfig config)
     {
         _console = console;
         _config = config;
