@@ -26,7 +26,10 @@ public class GenerateClassesHandler : ISimpleHandler<GenerateClassesArgs>
             return ExitCodes.Aborted;
         }
 
-        var files = Directory.EnumerateFiles(args.Folder, "xsd").ToArray();
+        var files = Directory
+            .GetFiles(args.Folder, "*.xsd")
+            .Select(f => new FileInfo(f).FullName)
+            .ToArray();
 
         if (files.Length == 0)
         {
@@ -35,23 +38,26 @@ public class GenerateClassesHandler : ISimpleHandler<GenerateClassesArgs>
         }
 
         var sb = new StringBuilder();
-        sb.Append("xsd /c ");
 
-        foreach (var file in files[..^2])
+        foreach (var file in files[..^1])
         {
-            sb.Append(file).Append(' ');
+            sb.Append($"\"{file}\"").Append(' ');
         }
 
         sb.Append(files[^1]);
 
+        _console.WriteLine($"Full args: \n {sb}");
+
         var process = new Process();
         process.StartInfo = new ProcessStartInfo()
         {
-            FileName = sb.ToString(),
+            FileName = "xsd.exe",
+            Arguments = $"/c {sb}",
             CreateNoWindow = true,
             RedirectStandardError = true,
             RedirectStandardOutput = true,
-            UseShellExecute = false
+            UseShellExecute = false,
+            WorkingDirectory = args.Folder
         };
         process.Start();
 
