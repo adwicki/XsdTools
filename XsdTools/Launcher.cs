@@ -24,7 +24,7 @@ public class Launcher
 
         HandlerFactory = new HandlerFactory(config);
     }
-
+    
     public async Task<int> InvokeAsync(RootCommand rootCommand, string[] args)
     {
         var parser = new CommandLineBuilder(rootCommand)

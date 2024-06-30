@@ -1,7 +1,10 @@
 ﻿using System.CommandLine;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XsdTools.FetchRelated;
 
+// ReSharper disable once ClassNeverInstantiated.Global
+[SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
 public class FetchArgs
 {
     public required string InputXsd { get; set; }

@@ -49,7 +49,7 @@ public class GenerateClassesHandler : ISimpleHandler<GenerateClassesArgs>
         _console.WriteLine($"Full args: \n {sb}");
 
         var process = new Process();
-        process.StartInfo = new ProcessStartInfo()
+        process.StartInfo = new ProcessStartInfo
         {
             FileName = "xsd.exe",
             Arguments = $"/c {sb}",

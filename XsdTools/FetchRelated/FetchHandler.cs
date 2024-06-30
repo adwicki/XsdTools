@@ -1,7 +1,5 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.Data;
-using System.Net;
 using System.Xml;
 
 namespace XsdTools.FetchRelated;
@@ -55,17 +53,17 @@ public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
             newPath,
             true);
 
-        _console.WriteLine($"Copied base file, now starting processing...");
+        _console.WriteLine("Copied base file, now starting processing...");
 
-        return await ProcessDocument(newPath, basePath, cancellationToken, 0); ;
+        return await ProcessDocument(newPath, basePath, 0, cancellationToken);
     }
 
-    public static string GetSpaces(int level)
+    private static string GetSpaces(int level)
     {
         return new string(' ', level * 2);
     }
 
-    private async Task<int> ProcessDocument(string xsdPath, string basePath, CancellationToken cancellationToken, int level)
+    private async Task<int> ProcessDocument(string xsdPath, string basePath, int level, CancellationToken cancellationToken)
     {
         var xsd = new XmlDocument();
         try
@@ -90,7 +88,7 @@ public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
                 _console.WriteLine($"{GetSpaces(level)} - Fetching {schemaLocation}...");
                 string fileName = await FetchSchema(schemaLocation, basePath, level);
 
-                await ProcessDocument(fileName, basePath, cancellationToken, level + 1);
+                await ProcessDocument(fileName, basePath, level + 1, cancellationToken);
 
                 _console.WriteLine($"{GetSpaces(level)} - Rewriting schema locations for {Path.GetFileName(xsdPath)}");
                 RewriteImportNodeSchemaLocation(importNode, fileName, level);
