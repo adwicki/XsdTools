@@ -2,6 +2,8 @@
 using System.CommandLine.Invocation;
 using System.Xml;
 
+using XsdTools.Services;
+
 namespace XsdTools.FetchRelated;
 
 // ReSharper disable once ClassNeverInstantiated.Global
@@ -10,49 +12,31 @@ public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
     private readonly IConsole _console;
     private readonly ApplicationConfig _config;
     private readonly HttpClient _client;
+    private readonly IOutputDirService _outputDirService;
 
-    public FetchHandler(IConsole console, ApplicationConfig config)
+    public FetchHandler(IConsole console, ApplicationConfig config, IOutputDirService outputDirService)
     {
         _console = console;
         _config = config;
+        _outputDirService = outputDirService;
         _client = new HttpClient();
     }
 
     public async Task<int> RunAsync(InvocationContext context, FetchArgs args,
         CancellationToken cancellationToken = default)
     {
+        _outputDirService.InitializeOutputDir();
+
         if (!File.Exists(args.InputXsd))
         {
             _console.WriteLine($"Could not find file {args.InputXsd}.");
             return ExitCodes.Aborted;
         }
 
-        FileHelper.EnsureOutputDirectoryExists(_config.OutputDir);
-
-        var folderName = Path.GetFileNameWithoutExtension(args.InputXsd);
-        var basePath = Path.Join(FileHelper.GetConcreteOutputDirectory(_config.OutputDir), folderName);
-        basePath = FileHelper.CreateValidPath(basePath);
-
-        if (Path.Exists(basePath) && args.Clean)
-        {
-            Directory.Delete(basePath, true);
-        }
-
-        if (!Path.Exists(basePath))
-        {
-            Directory.CreateDirectory(basePath);
-        }
-
+        var basePath = _outputDirService.CreateOutputFolderFromFilePath(args.InputXsd, args.Clean);
         _console.WriteLine($"Created new output directory: {basePath}");
 
-        var fileName = Path.GetFileName(args.InputXsd);
-        var newPath = Path.Join(basePath, fileName);
-
-        File.Copy(
-            args.InputXsd,
-            newPath,
-            true);
-
+        var newPath = _outputDirService.CopyFileToOutputFolder(basePath, args.InputXsd);
         _console.WriteLine("Copied base file, now starting processing...");
 
         return await ProcessDocument(newPath, basePath, 0, cancellationToken);
