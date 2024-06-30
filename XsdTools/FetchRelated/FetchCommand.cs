@@ -13,6 +13,7 @@ public class FetchCommand : Command, IServiceModule
         : base("fetch", "Given an xsd schema, fetches all linked (imported) schemas.")
     {
         FetchArgs.Declare(this);
+        AddAlias("f");
         Handler = handlerFactory.SimpleHandler<FetchHandler, FetchArgs>((() => [this]));
     }
 

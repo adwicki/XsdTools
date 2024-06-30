@@ -11,6 +11,7 @@ public class GenerateClassesCommand : Command, IServiceModule
         : base("generate-classes", "Generate classes given a folder with xsd schemas.")
     {
         GenerateClassesArgs.Declare(this);
+        AddAlias("gc");
         Handler = handlerFactory.SimpleHandler<GenerateClassesHandler, GenerateClassesArgs>((() => [this]));
     }
 
