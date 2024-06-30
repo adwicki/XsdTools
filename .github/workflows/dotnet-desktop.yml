@@ -25,18 +25,15 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
-
-    - name: Change working directory
-      run: cd XsdTools
     
     - name: Install dependencies
-      run: dotnet restore
+      run: dotnet restore {{ env.Project_Path }}
 
     - name: Build
-      run: dotnet build
+      run: dotnet build {{ env.Project_Path }}
 
     - name: Publish
-      run: dotnet publish -c Release
+      run: dotnet publish -c Release {{ env.Project_Path }}
 
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload build artifacts
