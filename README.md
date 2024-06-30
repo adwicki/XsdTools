@@ -1,6 +1,6 @@
 # XsdTools
 Small tool to automatically download heavily linked XSD schemas and prepare the files in a way, so they 
-can be easily fed to the xsd.exe in order to generate C# classes.
+can be easily fed to xsd.exe (https://learn.microsoft.com/en-us/dotnet/standard/serialization/xml-schema-definition-tool-xsd-exe) in order to generate C# classes.
 
 Why? Because I really can't be bothered to do that manually.
 
