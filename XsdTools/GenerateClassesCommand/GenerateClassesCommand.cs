@@ -3,6 +3,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using XsdTools.Services;
+
 namespace XsdTools.GenerateClassesCommand;
 
 public class GenerateClassesCommand : Command, IServiceModule
@@ -18,5 +20,7 @@ public class GenerateClassesCommand : Command, IServiceModule
     public void ConfigureServices(IServiceCollection services, IConfigurationRoot config)
     {
         services.AddSingleton(new ApplicationConfig(config));
+        services.AddTransient<IClassGeneratorService>(_ => new XsdExeClassGeneratorService(
+            services.BuildServiceProvider().GetService<IConsole>()!));
     }
 }

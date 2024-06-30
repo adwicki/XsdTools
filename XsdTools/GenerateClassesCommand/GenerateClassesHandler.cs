@@ -3,18 +3,20 @@ using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.Text;
 
+using XsdTools.Services;
+
 namespace XsdTools.GenerateClassesCommand;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public class GenerateClassesHandler : ISimpleHandler<GenerateClassesArgs>
 {
     private readonly IConsole _console;
-    private readonly ApplicationConfig _config;
+    private readonly IClassGeneratorService _classGeneratorService;
 
-    public GenerateClassesHandler(IConsole console, ApplicationConfig config)
+    public GenerateClassesHandler(IConsole console, IClassGeneratorService classGeneratorService)
     {
         _console = console;
-        _config = config;
+        _classGeneratorService = classGeneratorService;
     }
 
     public async Task<int> RunAsync(InvocationContext context, GenerateClassesArgs args,
@@ -26,55 +28,7 @@ public class GenerateClassesHandler : ISimpleHandler<GenerateClassesArgs>
             return ExitCodes.Aborted;
         }
 
-        var files = Directory
-            .GetFiles(args.Folder, "*.xsd")
-            .Select(f => new FileInfo(f).FullName)
-            .ToArray();
-
-        if (files.Length == 0)
-        {
-            _console.WriteLine($"Could not find any files in {args.Folder}");
-            return ExitCodes.Aborted;
-        }
-
-        var sb = new StringBuilder();
-
-        foreach (var file in files[..^1])
-        {
-            sb.Append($"\"{file}\"").Append(' ');
-        }
-
-        sb.Append(files[^1]);
-
-        _console.WriteLine($"Full args: \n {sb}");
-
-        var process = new Process();
-        process.StartInfo = new ProcessStartInfo
-        {
-            FileName = "xsd.exe",
-            Arguments = $"/c {sb}",
-            CreateNoWindow = true,
-            RedirectStandardError = true,
-            RedirectStandardOutput = true,
-            UseShellExecute = false,
-            WorkingDirectory = args.Folder
-        };
-        process.Start();
-
-        var stdError = await process.StandardError.ReadToEndAsync(cancellationToken);
-        var stdOut = await process.StandardOutput.ReadToEndAsync(cancellationToken);
-
-        await process.WaitForExitAsync(cancellationToken);
-
-        if (stdError.Length > 0)
-        {
-            _console.WriteLine($"Error: {stdError}");
-        }
-
-        if (stdOut.Length > 0)
-        {
-            _console.WriteLine(stdOut);
-        }
+        await _classGeneratorService.GenerateClasses(args.Folder, cancellationToken);
 
         return ExitCodes.Ok;
     }
