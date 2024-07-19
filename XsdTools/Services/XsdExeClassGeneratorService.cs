@@ -15,18 +15,31 @@ public class XsdExeClassGeneratorService : IClassGeneratorService
     public async Task<int> GenerateClasses(string directory,
         CancellationToken cancellationToken)
     {
-        var files = Directory
-            .GetFiles(directory, "*.xsd")
+        string mainFileName = new DirectoryInfo(directory).Name;
+        var files = new List<string>();
+        var mainFile = Directory.GetFiles(directory, $"{mainFileName}.xsd")
             .Select(f => new FileInfo(f).FullName)
-            .ToArray();
+            .FirstOrDefault();
 
-        if (files.Length == 0)
+        if (mainFile == null)
         {
-            _console.WriteLine($"Could not find any files in {directory}");
+            _console.WriteLine($"Couldn't find main-file {mainFileName}");
             return ExitCodes.Aborted;
         }
 
-        var args = BuildArgumentString(files);
+        files.Add(mainFile);
+
+        var relatedFiles = Directory
+            .GetFiles(directory, "*.xsd")
+            .Select(f => new FileInfo(f).FullName)
+            .Where(f => f != mainFileName)
+            .ToList();
+
+        files.AddRange(relatedFiles);
+
+        var args = BuildArgumentString(files.ToArray());
+
+        _console.WriteLine($"Will run:\nxsd.exe /c {args}");
 
         var process = new Process();
         process.StartInfo = new ProcessStartInfo
@@ -68,7 +81,7 @@ public class XsdExeClassGeneratorService : IClassGeneratorService
             sb.Append($"\"{file}\"").Append(' ');
         }
 
-        sb.Append(files[^1]);
+        sb.Append($"\"{files[^1]}\"");
         return sb.ToString();
     }
 }
