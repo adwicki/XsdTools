@@ -1,5 +1,6 @@
 ﻿using System.CommandLine;
 using System.CommandLine.Invocation;
+using System.Text;
 using System.Xml;
 
 using XsdTools.Services;
@@ -10,14 +11,12 @@ namespace XsdTools.FetchRelated;
 public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
 {
     private readonly IConsole _console;
-    private readonly ApplicationConfig _config;
     private readonly HttpClient _client;
     private readonly IOutputDirService _outputDirService;
 
-    public FetchHandler(IConsole console, ApplicationConfig config, IOutputDirService outputDirService)
+    public FetchHandler(IConsole console, IOutputDirService outputDirService)
     {
         _console = console;
-        _config = config;
         _outputDirService = outputDirService;
         _client = new HttpClient();
     }
@@ -79,7 +78,13 @@ public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
         var newPath = _outputDirService.CopyFileToOutputFolder(basePath, inputPath);
         _console.WriteLine("Copied base file, now starting processing...");
 
-        return await ProcessDocument(newPath, basePath, 0, cancellationToken);
+        var importStructure = new StringBuilder();
+
+        var exitCode = await ProcessDocument(newPath, basePath, 0, importStructure, cancellationToken);
+
+        _console.WriteLine($"\nImport structure:\n{importStructure}");
+
+        return exitCode;
     }
 
     private static string GetSpaces(int level)
@@ -87,7 +92,8 @@ public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
         return new string(' ', level * 2);
     }
 
-    private async Task<int> ProcessDocument(string xsdPath, string basePath, int level, CancellationToken cancellationToken)
+    private async Task<int> ProcessDocument(string xsdPath, string basePath, int level, StringBuilder importStructure,
+        CancellationToken cancellationToken)
     {
         var xsd = new XmlDocument();
         try
@@ -102,9 +108,12 @@ public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
 
         var importNodes = xsd.SelectNodes("//*[local-name()='import']");
 
+        var currentSchema = Path.GetFileNameWithoutExtension(xsdPath);
+        importStructure.AppendLine($"{GetSpaces(level)}- {currentSchema}");
+
         if (importNodes is { Count: > 0 })
         {
-            _console.WriteLine($"{GetSpaces(level)}Found {importNodes.Count} imports in {Path.GetFileNameWithoutExtension(xsdPath)}.");
+            _console.WriteLine($"{GetSpaces(level)}Found {importNodes.Count} imports in {currentSchema}.");
 
             foreach (var importNode in importNodes.Cast<XmlElement>())
             {
@@ -112,7 +121,7 @@ public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
                 _console.WriteLine($"{GetSpaces(level)} - Fetching {schemaLocation}...");
                 string fileName = await FetchSchema(schemaLocation, basePath, level);
 
-                await ProcessDocument(fileName, basePath, level + 1, cancellationToken);
+                await ProcessDocument(fileName, basePath, level + 1, importStructure, cancellationToken);
 
                 _console.WriteLine($"{GetSpaces(level)} - Rewriting schema locations for {Path.GetFileName(xsdPath)}");
                 RewriteImportNodeSchemaLocation(importNode, fileName, level);
@@ -122,7 +131,7 @@ public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
         }
         else
         {
-            _console.WriteLine($"{GetSpaces(level)}Found no import nodes in {Path.GetFileNameWithoutExtension(xsdPath)}, stopping exploration.");
+            _console.WriteLine($"{GetSpaces(level)}Found no import nodes in {currentSchema}, stopping exploration.");
             return ExitCodes.Ok;
         }
 
