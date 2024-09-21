@@ -10,9 +10,9 @@ public class GenerateClassesArgs
 
     public static void Declare(Command command)
     {
-        command.AddArgument(new Argument<string>("Folder")
-        {
-            Description = "Specify the folder to process with the xsd tool."
-        });
+        command.AddArgument(new Argument<string>(
+            "Folder",
+            () => String.Empty,
+            "Specify the folder to process with the xsd tool."));
     }
 }

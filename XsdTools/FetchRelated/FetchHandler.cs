@@ -25,18 +25,58 @@ public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
     public async Task<int> RunAsync(InvocationContext context, FetchArgs args,
         CancellationToken cancellationToken = default)
     {
+        string inputPath = string.Empty;
         _outputDirService.InitializeOutputDir();
-
-        if (!File.Exists(args.InputXsd))
+        if (string.IsNullOrEmpty(args.InputXsd))
         {
-            _console.WriteLine($"Could not find file {args.InputXsd}.");
-            return ExitCodes.Aborted;
+            var files = Directory.GetFiles(_config.InputDir, "*.xsd");
+            if (files.Length == 0)
+            {
+                _console.WriteLine($"Could not any files in input directory: {_config.InputDir}");
+                return ExitCodes.Aborted;
+            }
+
+            _console.WriteLine("Available files:");
+            var counter = 1;
+            foreach (string file in files)
+            {
+                _console.WriteLine($"  {counter++}. File: {file}");
+            }
+
+            _console.Write("Choose file: ");
+            var input = Console.ReadLine();
+
+            if (!int.TryParse(input, out int index))
+            {
+                _console.WriteLine("Invalid input, please provide a number.");
+                return ExitCodes.Aborted;
+            }
+
+            index -= 1;
+
+            if (index < 0 || index >= files.Length)
+            {
+                _console.WriteLine("Invalid input, out of range.");
+                return ExitCodes.Aborted;
+            }
+
+            inputPath = files[index];
+        }
+        else
+        {
+            if (!File.Exists(args.InputXsd))
+            {
+                _console.WriteLine($"Could not find file {args.InputXsd}.");
+                return ExitCodes.Aborted;
+            }
+
+            inputPath = args.InputXsd;
         }
 
-        var basePath = _outputDirService.CreateOutputFolderFromFilePath(args.InputXsd, args.Clean);
+        var basePath = _outputDirService.CreateOutputFolderFromFilePath(inputPath, args.Clean);
         _console.WriteLine($"Created new output directory: {basePath}");
 
-        var newPath = _outputDirService.CopyFileToOutputFolder(basePath, args.InputXsd);
+        var newPath = _outputDirService.CopyFileToOutputFolder(basePath, inputPath);
         _console.WriteLine("Copied base file, now starting processing...");
 
         return await ProcessDocument(newPath, basePath, 0, cancellationToken);

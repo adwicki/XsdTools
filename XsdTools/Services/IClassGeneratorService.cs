@@ -1,6 +1,4 @@
-﻿using System.CommandLine;
-
-namespace XsdTools.Services;
+﻿namespace XsdTools.Services;
 
 public interface IClassGeneratorService
 {

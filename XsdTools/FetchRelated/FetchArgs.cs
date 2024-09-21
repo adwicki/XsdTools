@@ -12,14 +12,14 @@ public class FetchArgs
 
     public static void Declare(Command command)
     {
-        command.AddArgument(new Argument<string>("InputXsd")
-        {
-            Description = "The 'root' xsd file for which related schemas should be fetched"
-        });
+        command.AddArgument(new Argument<string>(
+            "InputXsd",
+            () => string.Empty,
+            "The 'root' xsd file for which related schemas should be fetched"));
 
-        command.AddOption(new Option<bool>("--clean")
-        {
-            Description = "If set, the output directory will be deleted before generation."
-        });
+        command.AddOption(new Option<bool>(
+            "--clean",
+            () => false,
+            "If set, the output directory will be deleted before generation."));
     }
 }

@@ -3,7 +3,6 @@ using System.CommandLine.Builder;
 using System.CommandLine.Invocation;
 using System.CommandLine.IO;
 using System.CommandLine.Parsing;
-using System.Reflection;
 
 using Microsoft.Extensions.Configuration;
 
@@ -17,14 +16,11 @@ public class Launcher
     {
         IConfigurationRoot config = new ConfigurationBuilder()
             .AddJsonFile("appSettings.json")
-            .AddJsonFile("secrets.user.json", optional: true)
-            .AddJsonFile("secrets.json", optional: true)
-            .AddJsonFile($"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}/{Assembly.GetEntryAssembly()?.GetName().Name ?? "cli"}.json", optional: true)
             .Build();
 
         HandlerFactory = new HandlerFactory(config);
     }
-    
+
     public async Task<int> InvokeAsync(RootCommand rootCommand, string[] args)
     {
         var parser = new CommandLineBuilder(rootCommand)
