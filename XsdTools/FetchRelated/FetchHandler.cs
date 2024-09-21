@@ -13,10 +13,12 @@ public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
     private readonly IConsole _console;
     private readonly HttpClient _client;
     private readonly IOutputDirService _outputDirService;
+    private readonly ApplicationConfig _config;
 
-    public FetchHandler(IConsole console, IOutputDirService outputDirService)
+    public FetchHandler(IConsole console, IOutputDirService outputDirService, ApplicationConfig config)
     {
         _console = console;
+        _config = config;
         _outputDirService = outputDirService;
         _client = new HttpClient();
     }
@@ -24,7 +26,7 @@ public class FetchHandler : ISimpleHandler<FetchArgs>, IDisposable
     public async Task<int> RunAsync(InvocationContext context, FetchArgs args,
         CancellationToken cancellationToken = default)
     {
-        string inputPath = string.Empty;
+        string inputPath;
         _outputDirService.InitializeOutputDir();
         if (string.IsNullOrEmpty(args.InputXsd))
         {
